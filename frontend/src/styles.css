@@ -1,0 +1,45 @@
+:root {
+  font-family: Inter, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #131313;
+  color: #e5e2e1;
+}
+
+main {
+  padding: 110px 24px 32px;
+}
+
+.glass-panel {
+  background: rgba(53, 53, 52, 0.4);
+  backdrop-filter: blur(24px);
+}
+
+.seat-grid-container {
+  perspective: 1000px;
+}
+
+.screen-curve {
+  height: 4px;
+  width: 80%;
+  margin: 0 auto;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, transparent, #ffb4aa, transparent);
+  box-shadow: 0 10px 30px rgba(229, 9, 20, 0.4);
+  filter: blur(1px);
+}
+
+.seat-grid {
+  transform: rotateX(10deg);
+}
+
+.seat {
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.error-text {
+  color: #ffb4ab;
+}
