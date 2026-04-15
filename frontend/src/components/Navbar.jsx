@@ -19,20 +19,20 @@ export default function Navbar() {
           <Link className="text-[#ffb4aa] border-b-2 border-[#e50914] pb-1" to="/">Movies</Link>
           <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/theatre">Theatres</Link>
           <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/summary">Summary</Link>
-          <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/login">Login</Link>
+          {!user && <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/login">Login</Link>}
         </div>
         <div className="flex items-center gap-3">
           {user && <span className="text-sm text-[#af8782] hidden sm:inline">{user.name}</span>}
           {user ? (
             <button
-              className="bg-[#e50914] text-white px-4 py-2 rounded-xl text-sm font-bold"
+              className="bg-[#e50914] text-white px-4 py-2 rounded-xl text-sm font-bold hover:shadow-lg transition-shadow"
               type="button"
               onClick={handleLogout}
             >
               Logout
             </button>
           ) : (
-            <Link className="bg-[#353534] text-white px-4 py-2 rounded-xl text-sm font-bold" to="/login">
+            <Link className="bg-[#353534] text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-[#454544] transition-colors" to="/login">
               Login
             </Link>
           )}

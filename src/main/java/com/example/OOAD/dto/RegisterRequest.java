@@ -7,6 +7,16 @@ public class RegisterRequest {
     private String password;
     private boolean admin;
 
+    public RegisterRequest() {
+    }
+
+    public RegisterRequest(String name, String email, String password, boolean admin) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.admin = admin;
+    }
+
     public String getName() {
         return name;
     }
