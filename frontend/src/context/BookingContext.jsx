@@ -200,9 +200,21 @@ export function BookingProvider({ children }) {
   };
 
   const login = async (email, password) => {
-    const response = await loginUser({ email, password });
-    setUser(response);
-    return response;
+    try {
+      const response = await loginUser({ email, password });
+      if (response && response.userId) {
+        setUser(response);
+        return response;
+      } else {
+        throw new Error("Invalid response from server");
+      }
+    } catch (error) {
+      setState((previous) => ({
+        ...previous,
+        error: error?.response?.data?.message || "Login failed"
+      }));
+      throw error;
+    }
   };
 
   const logout = () => {

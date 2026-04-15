@@ -85,8 +85,8 @@ CREATE TABLE booking_seats (
 ) ENGINE=InnoDB;
 
 INSERT INTO users (user_type, name, email, password) VALUES
-('CUSTOMER', 'Demo User', 'demo@cinebook.com', 'demo123'),
-('ADMIN', 'System Admin', 'admin@cinebook.com', 'admin123');
+('CUSTOMER', 'Test User', 'test@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36DxJiKe'),
+('ADMIN', 'Admin User', 'admin@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36DxJiKe');
 
 INSERT INTO movies (movie_name, genre, duration, rating, thumbnail_url) VALUES
 ('Mission Impossible', 'Action', '110 min', '8.1', '/thumbnails/mi1.jpeg'),

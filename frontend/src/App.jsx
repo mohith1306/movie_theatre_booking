@@ -8,6 +8,7 @@ import Summary from "./pages/Summary";
 import Payment from "./pages/Payment";
 import Confirmation from "./pages/Confirmation";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 export default function App() {
   const RequirePaymentAccess = ({ children }) => {
@@ -52,6 +53,7 @@ export default function App() {
             }
           />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

@@ -1,5 +1,9 @@
 package com.example.OOAD.service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.OOAD.dto.AuthResponse;
 import com.example.OOAD.dto.LoginRequest;
 import com.example.OOAD.dto.RegisterRequest;
@@ -8,16 +12,19 @@ import com.example.OOAD.model.Admin;
 import com.example.OOAD.model.Customer;
 import com.example.OOAD.model.User;
 import com.example.OOAD.repository.UserRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.example.OOAD.security.JwtUtil;
 
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthService(UserRepository userRepository) {
+    public AuthService(UserRepository userRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -40,25 +47,38 @@ public class AuthService {
         }
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         User saved = userRepository.save(user);
         return toAuthResponse(saved);
     }
 
     public AuthResponse login(LoginRequest request) {
+        System.out.println("[LOGIN] Attempting login for email: " + request.getEmail());
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BadRequestException("Invalid email or password"));
+                .orElseThrow(() -> {
+                    System.out.println("[LOGIN] User not found for email: " + request.getEmail());
+                    return new BadRequestException("Invalid email or password");
+                });
 
-        if (!user.getPassword().equals(request.getPassword())) {
+        System.out.println("[LOGIN] User found: " + user.getEmail());
+        System.out.println("[LOGIN] Stored hash: " + user.getPassword().substring(0, Math.min(20, user.getPassword().length())) + "...");
+        
+        boolean passwordMatches = passwordEncoder.matches(request.getPassword(), user.getPassword());
+        System.out.println("[LOGIN] Password match result: " + passwordMatches);
+        
+        if (!passwordMatches) {
+            System.out.println("[LOGIN] Password mismatch for user: " + request.getEmail());
             throw new BadRequestException("Invalid email or password");
         }
 
+        System.out.println("[LOGIN] Login successful for user: " + request.getEmail());
         return toAuthResponse(user);
     }
 
     private AuthResponse toAuthResponse(User user) {
         String role = (user instanceof Admin) ? "ADMIN" : "CUSTOMER";
-        return new AuthResponse(user.getUserId(), user.getName(), user.getEmail(), role);
+        String token = jwtUtil.generateToken(user.getEmail(), user.getUserId());
+        return new AuthResponse(user.getUserId(), user.getName(), user.getEmail(), role, token);
     }
 }

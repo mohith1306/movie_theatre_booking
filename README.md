@@ -70,9 +70,50 @@ Frontend URL: `http://localhost:5173` (or next available port).
 - `GET /movies`
 - `GET /theatres`
 - `GET /seats/{showId}`
-- `POST /auth/login`
+- `POST /auth/login` - Login with email and password, returns JWT token
+- `POST /auth/register` - Register new user account
 - `POST /booking/create`
 - `POST /booking/cancel/{bookingId}`
+
+## Authentication & Login System
+
+The application includes a complete authentication system with JWT tokens and password hashing using BCrypt.
+
+### Test Credentials
+
+After running the database setup, use these test accounts:
+
+**Customer Account:**
+- Email: `test@example.com`
+- Password: `password`
+
+**Admin Account:**
+- Email: `admin@example.com`
+- Password: `password`
+
+### Features
+
+- **User Registration**: Sign up with email and password (minimum 6 characters)
+- **Secure Login**: Password hashing with BCrypt
+- **JWT Tokens**: Session management with JWT tokens (24-hour expiration)
+- **User State**: Persisted user session in localStorage
+- **Protected Routes**: Payment and confirmation pages require login
+- **Error Handling**: Comprehensive error messages for failed authentication
+
+### How to Register
+
+1. Click "Register" link on the login page or navigate to `/register`
+2. Fill in your details (name, email, password)
+3. Confirm your password
+4. Click "Register"
+5. You'll be redirected to login page after successful registration
+
+### How to Login
+
+1. Navigate to `/login` or click "Login" in the navbar
+2. Enter your email and password
+3. Click "Login"
+4. On success, you'll be redirected to the home page with user info displayed in navbar
 
 ## Notes for GitHub Push
 
