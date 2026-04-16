@@ -14,7 +14,7 @@ export default function Login() {
 
   // If already logged in, redirect to home
   if (user) {
-    navigate("/");
+    navigate(user.role === "ADMIN" ? "/admin" : "/");
     return null;
   }
 
@@ -32,10 +32,10 @@ export default function Login() {
     }
 
     try {
-      await login(email, password);
+      const response = await login(email, password);
       setSuccessMessage("Login successful! Redirecting...");
       setTimeout(() => {
-        navigate("/");
+        navigate(response?.role === "ADMIN" ? "/admin" : "/");
       }, 1500);
     } catch (err) {
       setError(err?.response?.data?.message || "Invalid login credentials. Please try again.");

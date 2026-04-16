@@ -1,7 +1,9 @@
 import axios from "axios";
 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8081";
+
 const api = axios.create({
-  baseURL: "http://localhost:8080"
+  baseURL: API_BASE_URL
 });
 
 export const fetchSeats = async (showId) => {
@@ -36,6 +38,62 @@ export const loginUser = async (credentials) => {
 
 export const registerUser = async (userData) => {
   const response = await api.post("/auth/register", userData);
+  return response.data;
+};
+
+export const addTheatre = async (payload) => {
+  const response = await api.post("/admin/addTheatre", payload);
+  return response.data;
+};
+
+export const addScreen = async (payload) => {
+  const response = await api.post("/admin/addScreen", payload);
+  return response.data;
+};
+
+export const addSeat = async (payload) => {
+  const response = await api.post("/admin/addSeat", payload);
+  return response.data;
+};
+
+export const addShow = async (payload) => {
+  const response = await api.post("/admin/addShow", payload);
+  return response.data;
+};
+
+export const setSeatMaintenance = async (seatId, value) => {
+  const response = await api.post(`/admin/seat/${seatId}/maintenance`, null, {
+    params: { value }
+  });
+  return response.data;
+};
+
+export const addMovie = async (payload) => {
+  const response = await api.post("/admin/addMovie", payload);
+  return response.data;
+};
+
+export const uploadThumbnail = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await api.post("/admin/uploadThumbnail", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
+  });
+  return response.data;
+};
+
+export const getAdminScreens = async (theatreId) => {
+  const response = await api.get("/admin/screens", {
+    params: theatreId ? { theatreId } : undefined
+  });
+  return response.data;
+};
+
+export const deleteMovie = async (movieId) => {
+  const response = await api.delete(`/admin/deleteMovie/${movieId}`);
   return response.data;
 };
 

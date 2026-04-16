@@ -40,29 +40,29 @@ export function BookingProvider({ children }) {
     return initialBookingState;
   });
 
+  const refreshCatalog = async () => {
+    setState((previous) => ({ ...previous, isLoadingCatalog: true, catalogError: "" }));
+
+    try {
+      const [movies, theatres] = await Promise.all([getMovies(), getTheatres()]);
+
+      setState((previous) => ({
+        ...previous,
+        movies: movies.map(normalizeMovie),
+        theatres: theatres.map(normalizeTheatre),
+        isLoadingCatalog: false
+      }));
+    } catch {
+      setState((previous) => ({
+        ...previous,
+        isLoadingCatalog: false,
+        catalogError: "Failed to load movies or theatres"
+      }));
+    }
+  };
+
   useEffect(() => {
-    const loadCatalog = async () => {
-      setState((previous) => ({ ...previous, isLoadingCatalog: true, catalogError: "" }));
-
-      try {
-        const [movies, theatres] = await Promise.all([getMovies(), getTheatres()]);
-
-        setState((previous) => ({
-          ...previous,
-          movies: movies.map(normalizeMovie),
-          theatres: theatres.map(normalizeTheatre),
-          isLoadingCatalog: false
-        }));
-      } catch {
-        setState((previous) => ({
-          ...previous,
-          isLoadingCatalog: false,
-          catalogError: "Failed to load movies or theatres"
-        }));
-      }
-    };
-
-    loadCatalog();
+    refreshCatalog();
   }, []);
 
   useEffect(() => {
@@ -93,16 +93,20 @@ export function BookingProvider({ children }) {
 
       try {
         const seats = await fetchSeats(state.selectedShowId);
+        const normalizedSeats = seats.map(normalizeSeat);
+        const validSeatIdSet = new Set(normalizedSeats.map((seat) => String(seat.seatId)));
+
         setState((previous) => ({
           ...previous,
-          seatData: seats.map((seat) => {
-            const normalizedSeat = normalizeSeat(seat);
-
-            return {
-              ...normalizedSeat,
-              uiStatus: seatUiStatus(normalizedSeat.status, previous.selectedSeatIds, normalizedSeat.seatId)
-            };
-          }),
+          selectedSeatIds: previous.selectedSeatIds.filter((seatId) => validSeatIdSet.has(String(seatId))),
+          seatData: normalizedSeats.map((normalizedSeat) => ({
+            ...normalizedSeat,
+            uiStatus: seatUiStatus(
+              normalizedSeat.status,
+              previous.selectedSeatIds.filter((seatId) => validSeatIdSet.has(String(seatId))),
+              normalizedSeat.seatId
+            )
+          })),
           isLoadingSeats: false
         }));
       } catch {
@@ -133,7 +137,9 @@ export function BookingProvider({ children }) {
   }, [state.selectedSeatIds]);
 
   const selectedSeats = useMemo(() => {
-    return state.seatData.filter((seat) => state.selectedSeatIds.includes(seat.seatId));
+    return state.seatData.filter((seat) =>
+      state.selectedSeatIds.some((selectedSeatId) => String(selectedSeatId) === String(seat.seatId))
+    );
   }, [state.seatData, state.selectedSeatIds]);
 
   const setSelectedMovie = (selectedMovie) => {
@@ -160,8 +166,10 @@ export function BookingProvider({ children }) {
     }
 
     setState((previous) => {
-      const nextSelectedSeatIds = previous.selectedSeatIds.includes(seat.seatId)
-        ? previous.selectedSeatIds.filter((seatId) => seatId !== seat.seatId)
+      const isAlreadySelected = previous.selectedSeatIds.some((seatId) => String(seatId) === String(seat.seatId));
+
+      const nextSelectedSeatIds = isAlreadySelected
+        ? previous.selectedSeatIds.filter((seatId) => String(seatId) !== String(seat.seatId))
         : [...previous.selectedSeatIds, seat.seatId];
 
       return {
@@ -258,6 +266,7 @@ export function BookingProvider({ children }) {
     theatres: state.theatres,
     isLoadingCatalog: state.isLoadingCatalog,
     catalogError: state.catalogError,
+    refreshCatalog,
     selectedMovie: state.selectedMovie,
     setSelectedMovie,
     selectedTheatre: state.selectedTheatre,

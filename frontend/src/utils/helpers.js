@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "../services/api";
+
 export const STORAGE_KEYS = {
   user: "movie_theatre_user",
   booking: "movie_theatre_booking_state"
@@ -86,12 +88,19 @@ export function getBookingTotal(selectedSeats) {
 }
 
 export function normalizeMovie(movie) {
+  const rawThumbnail = movie.thumbnailUrl ?? movie.image ?? "";
+  // Uploaded files are served by backend under /uploads/**.
+  // Seed/default thumbnails under /thumbnails/** are served by frontend public assets.
+  const thumbnailUrl = rawThumbnail.startsWith("/uploads/")
+    ? `${API_BASE_URL}${rawThumbnail}`
+    : rawThumbnail;
+
   return {
     ...movie,
     id: movie.id ?? movie.movieId,
     movieId: movie.movieId ?? movie.id,
     title: movie.title ?? movie.movieName,
-    thumbnailUrl: movie.thumbnailUrl ?? movie.image ?? ""
+    thumbnailUrl
   };
 }
 

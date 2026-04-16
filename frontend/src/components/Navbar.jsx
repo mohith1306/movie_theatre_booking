@@ -19,6 +19,11 @@ export default function Navbar() {
           <Link className="text-[#ffb4aa] border-b-2 border-[#e50914] pb-1" to="/">Movies</Link>
           <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/theatre">Theatres</Link>
           <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/summary">Summary</Link>
+          {user?.role === "ADMIN" && (
+            <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/admin">
+              Admin
+            </Link>
+          )}
           {!user && <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/login">Login</Link>}
         </div>
         <div className="flex items-center gap-3">

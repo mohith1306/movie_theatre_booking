@@ -6,6 +6,7 @@ import com.example.OOAD.exception.NotFoundException;
 import com.example.OOAD.model.BookingStatus;
 import com.example.OOAD.model.Seat;
 import com.example.OOAD.model.SeatStatus;
+import com.example.OOAD.model.SeatType;
 import com.example.OOAD.model.Show;
 import com.example.OOAD.repository.BookingRepository;
 import com.example.OOAD.repository.SeatRepository;
@@ -13,8 +14,10 @@ import com.example.OOAD.repository.ShowRepository;
 import com.example.OOAD.strategy.AllocationStrategy;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +28,8 @@ import org.springframework.stereotype.Service;
 public class SeatAllocationService {
 
     private static final Duration LOCK_DURATION = Duration.ofMinutes(5);
+    private static final String[] DEFAULT_ROWS = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
+    private static final int DEFAULT_COLUMNS = 10;
 
     private final SeatRepository seatRepository;
     private final ShowRepository showRepository;
@@ -47,6 +52,8 @@ public class SeatAllocationService {
         Show show = showRepository.findById(showId)
                 .orElseThrow(() -> new NotFoundException("Show not found: " + showId));
 
+        ensureDefaultSeatLayoutForScreen(show.getScreen());
+
         cleanupExpiredLocks(showId);
 
         Set<Long> bookedSeatIds = bookingRepository.findByShowShowIdAndStatus(showId, BookingStatus.CONFIRMED)
@@ -68,7 +75,28 @@ public class SeatAllocationService {
             throw new ConflictException("Not enough seats available");
         }
 
-        List<Seat> selected = allocationStrategy.allocate(available, seatCount, preferredSeatIds);
+        List<Seat> selected;
+        if (preferredSeatIds != null && !preferredSeatIds.isEmpty()) {
+            Set<Long> uniquePreferredSeatIds = new LinkedHashSet<>(preferredSeatIds);
+            if (uniquePreferredSeatIds.size() != seatCount) {
+                throw new ConflictException("Selected seats count does not match requested seat count");
+            }
+
+            Map<Long, Seat> availableById = available.stream()
+                    .collect(Collectors.toMap(Seat::getSeatId, seat -> seat));
+
+            selected = uniquePreferredSeatIds.stream()
+                    .map(availableById::get)
+                    .filter(java.util.Objects::nonNull)
+                    .toList();
+
+            if (selected.size() != seatCount) {
+                throw new ConflictException("One or more selected seats are no longer available");
+            }
+        } else {
+            selected = allocationStrategy.allocate(available, seatCount, preferredSeatIds);
+        }
+
         if (selected.size() < seatCount) {
             throw new ConflictException("Could not allocate enough seats");
         }
@@ -77,10 +105,8 @@ public class SeatAllocationService {
             if (isSeatLocked(showId, seat.getSeatId())) {
                 throw new ConflictException("Seat already locked by another user: " + seat.getSeatNumber());
             }
-            seat.setStatus(SeatStatus.LOCKED);
             lockRegistry.put(lockKey(showId, seat.getSeatId()), Instant.now().plus(LOCK_DURATION));
         }
-        seatRepository.saveAll(selected);
         return selected;
     }
 
@@ -95,20 +121,14 @@ public class SeatAllocationService {
 
     public synchronized void confirmLockedSeats(Long showId, List<Seat> seats) {
         for (Seat seat : seats) {
-            seat.setStatus(SeatStatus.BOOKED);
             lockRegistry.remove(lockKey(showId, seat.getSeatId()));
         }
-        seatRepository.saveAll(seats);
     }
 
     public synchronized void releaseLockedSeats(Long showId, List<Seat> seats) {
         for (Seat seat : seats) {
-            if (seat.getStatus() == SeatStatus.LOCKED) {
-                seat.setStatus(SeatStatus.AVAILABLE);
-            }
             lockRegistry.remove(lockKey(showId, seat.getSeatId()));
         }
-        seatRepository.saveAll(seats);
     }
 
     public synchronized void moveBookedSeatToAvailable(Seat seat) {
@@ -123,6 +143,8 @@ public class SeatAllocationService {
         Show show = showRepository.findById(showId)
                 .orElseThrow(() -> new NotFoundException("Show not found: " + showId));
 
+        ensureDefaultSeatLayoutForScreen(show.getScreen());
+
         cleanupExpiredLocks(showId);
 
         Set<Long> bookedSeatIds = bookingRepository.findByShowShowIdAndStatus(showId, BookingStatus.CONFIRMED)
@@ -133,7 +155,8 @@ public class SeatAllocationService {
 
         return seatRepository.findByScreenScreenId(show.getScreen().getScreenId())
                 .stream()
-                .filter(seat -> seat.getStatus() == SeatStatus.AVAILABLE)
+            // Persisted status is global per screen seat. Only maintenance should block by default.
+            .filter(seat -> seat.getStatus() != SeatStatus.UNDER_MAINTENANCE)
                 .filter(seat -> !bookedSeatIds.contains(seat.getSeatId()))
                 .filter(seat -> !isSeatLocked(showId, seat.getSeatId()))
                 .toList();
@@ -167,17 +190,10 @@ public class SeatAllocationService {
             lockRegistry.remove(key);
             String[] parts = key.split(":");
             Long keyShowId = Long.valueOf(parts[0]);
-            Long seatId = Long.valueOf(parts[1]);
 
             if (!keyShowId.equals(showId)) {
                 continue;
             }
-            seatRepository.findById(seatId).ifPresent(seat -> {
-                if (seat.getStatus() == SeatStatus.LOCKED) {
-                    seat.setStatus(SeatStatus.AVAILABLE);
-                    seatRepository.save(seat);
-                }
-            });
         }
     }
 
@@ -188,5 +204,32 @@ public class SeatAllocationService {
 
     private String lockKey(Long showId, Long seatId) {
         return showId + ":" + seatId;
+    }
+
+    private void ensureDefaultSeatLayoutForScreen(com.example.OOAD.model.Screen screen) {
+        Long screenId = screen.getScreenId();
+        List<Seat> existingSeats = seatRepository.findByScreenScreenId(screenId);
+        Set<String> existingSeatNumbers = existingSeats.stream()
+                .map(Seat::getSeatNumber)
+                .collect(Collectors.toSet());
+
+        List<Seat> missingSeats = new ArrayList<>();
+        for (String row : DEFAULT_ROWS) {
+            for (int column = 1; column <= DEFAULT_COLUMNS; column++) {
+                String seatNumber = row + column;
+                if (existingSeatNumbers.contains(seatNumber)) {
+                    continue;
+                }
+
+                SeatType type = "B".equals(row) ? SeatType.PREMIUM : SeatType.REGULAR;
+                Seat seat = new Seat(seatNumber, type, SeatStatus.AVAILABLE);
+                seat.setScreen(screen);
+                missingSeats.add(seat);
+            }
+        }
+
+        if (!missingSeats.isEmpty()) {
+            seatRepository.saveAll(missingSeats);
+        }
     }
 }

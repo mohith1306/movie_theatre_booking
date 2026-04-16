@@ -22,14 +22,17 @@ export default function SeatGrid({ seats, selectedSeatIds, onToggleSeat, onInval
             <span className="w-6 text-[10px] font-bold text-[#af8782]/60">{rowLetter}</span>
             <div className="flex gap-2">
               {COLUMNS.map((colNumber) => {
-                const seat = getSeat(rowLetter, colNumber) || {
-                  id: `${rowLetter}${colNumber}`,
-                  seatId: `${rowLetter}${colNumber}`,
-                  seatNumber: `${rowLetter}${colNumber}`,
-                  rowLetter,
-                  colNumber,
-                  status: "AVAILABLE"
-                };
+                const seat = getSeat(rowLetter, colNumber);
+
+                if (!seat) {
+                  return (
+                    <div
+                      key={`empty-${rowLetter}${colNumber}`}
+                      className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-t-lg border border-white/5 bg-transparent"
+                      title={`${rowLetter}${colNumber} - Not configured`}
+                    />
+                  );
+                }
 
                 const handleClick = () => {
                   if (seat.status === "BOOKED" || seat.status === "LOCKED") {
