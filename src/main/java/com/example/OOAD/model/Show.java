@@ -30,12 +30,6 @@ public class Show {
     @Column(name = "show_time", nullable = false)
     private LocalDateTime showTime;
 
-    @Column(nullable = false)
-    private boolean archived;
-
-    @Column(name = "archived_at")
-    private LocalDateTime archivedAt;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "screen_id", nullable = false)
     private Screen screen;
@@ -73,22 +67,6 @@ public class Show {
 
     public void setShowTime(LocalDateTime showTime) {
         this.showTime = showTime;
-    }
-
-    public boolean isArchived() {
-        return archived;
-    }
-
-    public void setArchived(boolean archived) {
-        this.archived = archived;
-    }
-
-    public LocalDateTime getArchivedAt() {
-        return archivedAt;
-    }
-
-    public void setArchivedAt(LocalDateTime archivedAt) {
-        this.archivedAt = archivedAt;
     }
 
     public Screen getScreen() {

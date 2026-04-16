@@ -15,12 +15,10 @@ CREATE TABLE users (
     user_id BIGINT NOT NULL AUTO_INCREMENT,
     user_type VARCHAR(31) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    username VARCHAR(255) NULL,
     email VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
     PRIMARY KEY (user_id),
     UNIQUE KEY UK_users_email (email),
-    UNIQUE KEY UK_users_username (username),
     CONSTRAINT CHK_users_type CHECK (user_type IN ('ADMIN', 'CUSTOMER'))
 ) ENGINE=InnoDB;
 
@@ -53,8 +51,6 @@ CREATE TABLE shows (
     show_id BIGINT NOT NULL AUTO_INCREMENT,
     movie_name VARCHAR(255) NOT NULL,
     show_time DATETIME(6) NOT NULL,
-    archived BOOLEAN NOT NULL DEFAULT FALSE,
-    archived_at DATETIME(6) NULL,
     screen_id BIGINT NOT NULL,
     PRIMARY KEY (show_id),
     CONSTRAINT FK_shows_screen FOREIGN KEY (screen_id) REFERENCES screens(screen_id)
@@ -88,9 +84,9 @@ CREATE TABLE booking_seats (
     CONSTRAINT FK_booking_seats_seat FOREIGN KEY (seat_id) REFERENCES seats(seat_id)
 ) ENGINE=InnoDB;
 
-INSERT INTO users (user_type, name, username, email, password) VALUES
-('CUSTOMER', 'Test User', NULL, 'test@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36DxJiKe'),
-('ADMIN', 'Admin User', 'admin', 'admin@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36DxJiKe');
+INSERT INTO users (user_type, name, email, password) VALUES
+('CUSTOMER', 'Test User', 'test@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36DxJiKe'),
+('ADMIN', 'Admin User', 'admin@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36DxJiKe');
 
 INSERT INTO movies (movie_name, genre, duration, rating, thumbnail_url) VALUES
 ('Mission Impossible', 'Action', '110 min', '8.1', '/thumbnails/mi1.jpeg'),

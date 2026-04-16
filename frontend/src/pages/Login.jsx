@@ -14,7 +14,7 @@ export default function Login() {
 
   // If already logged in, redirect to home
   if (user) {
-    navigate(user.role === "ADMIN" ? "/admin" : "/");
+    navigate("/");
     return null;
   }
 
@@ -32,10 +32,10 @@ export default function Login() {
     }
 
     try {
-      const response = await login(email, password);
+      await login(email, password);
       setSuccessMessage("Login successful! Redirecting...");
       setTimeout(() => {
-        navigate(response?.role === "ADMIN" ? "/admin" : "/");
+        navigate("/");
       }, 1500);
     } catch (err) {
       setError(err?.response?.data?.message || "Invalid login credentials. Please try again.");
@@ -82,13 +82,6 @@ export default function Login() {
         <Link to="/register" className="text-[#ffb4aa] hover:underline font-semibold">
           Register here
         </Link>
-      </div>
-      <div className="mt-3 text-center text-xs text-[#8f8a88]">
-        Admins should use the separate {" "}
-        <Link to="/admin/login" className="text-[#ffb4aa] hover:underline font-semibold">
-          admin login
-        </Link>
-        .
       </div>
     </section>
   );

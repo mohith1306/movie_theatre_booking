@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.OOAD.dto.AuthResponse;
-import com.example.OOAD.dto.AdminLoginRequest;
 import com.example.OOAD.dto.LoginRequest;
 import com.example.OOAD.dto.RegisterRequest;
 import com.example.OOAD.service.AuthService;
@@ -35,11 +34,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
-    }
-
-    @PostMapping("/admin/login")
-    public ResponseEntity<AuthResponse> adminLogin(@RequestBody AdminLoginRequest request) {
-        return ResponseEntity.ok(authService.adminLogin(request));
     }
     
     @GetMapping("/hash")

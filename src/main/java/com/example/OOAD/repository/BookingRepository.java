@@ -8,5 +8,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByShowShowIdAndStatus(Long showId, BookingStatus status);
     List<Booking> findByCustomerUserId(Long customerId);
-    boolean existsByShowShowId(Long showId);
 }

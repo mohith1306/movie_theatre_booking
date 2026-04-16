@@ -9,11 +9,9 @@ import com.example.OOAD.model.Theatre;
 import com.example.OOAD.repository.MovieRepository;
 import com.example.OOAD.repository.ShowRepository;
 import com.example.OOAD.repository.TheatreRepository;
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,16 +46,7 @@ public class CatalogService {
     @Transactional(readOnly = true)
     public List<TheatreResponse> getTheatres() {
         List<Theatre> theatres = theatreRepository.findAll();
-        Set<String> activeMovieNames = movieRepository.findAll().stream()
-                .map(Movie::getMovieName)
-                .collect(Collectors.toSet());
-        LocalDateTime now = LocalDateTime.now();
-
-        List<Show> shows = showRepository.findAll().stream()
-                .filter(show -> !show.isArchived())
-                .filter(show -> show.getShowTime() != null && show.getShowTime().isAfter(now))
-                .filter(show -> activeMovieNames.contains(show.getMovieName()))
-                .toList();
+        List<Show> shows = showRepository.findAll();
 
         Map<Long, List<ShowResponse>> showsByTheatre = shows.stream()
                 .filter(show -> show.getScreen() != null && show.getScreen().getTheatre() != null)

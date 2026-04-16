@@ -4,7 +4,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.OOAD.dto.AdminLoginRequest;
 import com.example.OOAD.dto.AuthResponse;
 import com.example.OOAD.dto.LoginRequest;
 import com.example.OOAD.dto.RegisterRequest;
@@ -43,7 +42,6 @@ public class AuthService {
         User user;
         if (request.isAdmin()) {
             user = new Admin();
-            user.setUsername(resolveAdminUsername(request));
         } else {
             user = new Customer();
         }
@@ -53,28 +51,6 @@ public class AuthService {
 
         User saved = userRepository.save(user);
         return toAuthResponse(saved);
-    }
-
-    public AuthResponse adminLogin(AdminLoginRequest request) {
-        if (request.getUsername() == null || request.getUsername().isBlank()) {
-            throw new BadRequestException("Username is required");
-        }
-        if (request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new BadRequestException("Password is required");
-        }
-
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new BadRequestException("Invalid username or password"));
-
-        if (!(user instanceof Admin)) {
-            throw new BadRequestException("Invalid username or password");
-        }
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadRequestException("Invalid username or password");
-        }
-
-        return toAuthResponse(user);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -102,20 +78,7 @@ public class AuthService {
 
     private AuthResponse toAuthResponse(User user) {
         String role = (user instanceof Admin) ? "ADMIN" : "CUSTOMER";
-        String token = jwtUtil.generateToken(user.getEmail(), user.getUserId(), role);
-        return new AuthResponse(user.getUserId(), user.getName(), user.getUsername(), user.getEmail(), role, token);
-    }
-
-    private String resolveAdminUsername(RegisterRequest request) {
-        if (request.getUsername() != null && !request.getUsername().isBlank()) {
-            return request.getUsername().trim();
-        }
-
-        String email = request.getEmail();
-        if (email != null && email.contains("@")) {
-            return email.substring(0, email.indexOf('@')).trim();
-        }
-
-        return "admin";
+        String token = jwtUtil.generateToken(user.getEmail(), user.getUserId());
+        return new AuthResponse(user.getUserId(), user.getName(), user.getEmail(), role, token);
     }
 }

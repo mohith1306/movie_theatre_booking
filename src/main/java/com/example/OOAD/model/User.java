@@ -24,9 +24,6 @@ public abstract class User {
     @Column(nullable = false)
     private String name;
 
-    @Column(unique = true)
-    private String username;
-
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -47,14 +44,6 @@ public abstract class User {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getEmail() {
