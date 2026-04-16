@@ -8,11 +8,13 @@ import com.example.OOAD.model.Seat;
 import com.example.OOAD.model.SeatStatus;
 import com.example.OOAD.model.Show;
 import com.example.OOAD.repository.BookingRepository;
+import com.example.OOAD.repository.MovieRepository;
 import com.example.OOAD.repository.SeatRepository;
 import com.example.OOAD.repository.ShowRepository;
 import com.example.OOAD.strategy.AllocationStrategy;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +30,7 @@ public class SeatAllocationService {
 
     private final SeatRepository seatRepository;
     private final ShowRepository showRepository;
+    private final MovieRepository movieRepository;
     private final BookingRepository bookingRepository;
     private final AllocationStrategy allocationStrategy;
 
@@ -35,10 +38,12 @@ public class SeatAllocationService {
 
     public SeatAllocationService(SeatRepository seatRepository,
             ShowRepository showRepository,
+            MovieRepository movieRepository,
             BookingRepository bookingRepository,
             AllocationStrategy allocationStrategy) {
         this.seatRepository = seatRepository;
         this.showRepository = showRepository;
+        this.movieRepository = movieRepository;
         this.bookingRepository = bookingRepository;
         this.allocationStrategy = allocationStrategy;
     }
@@ -46,6 +51,8 @@ public class SeatAllocationService {
     public List<SeatResponse> getSeatsForShow(Long showId) {
         Show show = showRepository.findById(showId)
                 .orElseThrow(() -> new NotFoundException("Show not found: " + showId));
+
+        validateShowIsActive(show);
 
         cleanupExpiredLocks(showId);
 
@@ -123,6 +130,8 @@ public class SeatAllocationService {
         Show show = showRepository.findById(showId)
                 .orElseThrow(() -> new NotFoundException("Show not found: " + showId));
 
+        validateShowIsActive(show);
+
         cleanupExpiredLocks(showId);
 
         Set<Long> bookedSeatIds = bookingRepository.findByShowShowIdAndStatus(showId, BookingStatus.CONFIRMED)
@@ -184,6 +193,15 @@ public class SeatAllocationService {
     private boolean isSeatLocked(Long showId, Long seatId) {
         Instant expiry = lockRegistry.get(lockKey(showId, seatId));
         return expiry != null && expiry.isAfter(Instant.now());
+    }
+
+    private void validateShowIsActive(Show show) {
+        if (show.isArchived() || show.getShowTime() == null || show.getShowTime().isBefore(LocalDateTime.now())) {
+            throw new NotFoundException("Show is no longer available");
+        }
+        if (!movieRepository.existsByMovieName(show.getMovieName())) {
+            throw new NotFoundException("Show is no longer available");
+        }
     }
 
     private String lockKey(Long showId, Long seatId) {

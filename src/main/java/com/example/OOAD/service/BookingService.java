@@ -12,6 +12,7 @@ import com.example.OOAD.model.Seat;
 import com.example.OOAD.model.Show;
 import com.example.OOAD.repository.BookingRepository;
 import com.example.OOAD.repository.CustomerRepository;
+import com.example.OOAD.repository.MovieRepository;
 import com.example.OOAD.repository.ShowRepository;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +26,7 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final CustomerRepository customerRepository;
     private final ShowRepository showRepository;
+    private final MovieRepository movieRepository;
     private final SeatAllocationService seatAllocationService;
     private final PaymentService paymentService;
     private final NotificationService notificationService;
@@ -32,12 +34,14 @@ public class BookingService {
     public BookingService(BookingRepository bookingRepository,
             CustomerRepository customerRepository,
             ShowRepository showRepository,
+            MovieRepository movieRepository,
             SeatAllocationService seatAllocationService,
             PaymentService paymentService,
             NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
         this.customerRepository = customerRepository;
         this.showRepository = showRepository;
+        this.movieRepository = movieRepository;
         this.seatAllocationService = seatAllocationService;
         this.paymentService = paymentService;
         this.notificationService = notificationService;
@@ -52,6 +56,8 @@ public class BookingService {
 
         Show show = showRepository.findById(request.getShowId())
                 .orElseThrow(() -> new NotFoundException("Show not found: " + request.getShowId()));
+
+        validateShowIsActive(show);
 
         List<Seat> lockedSeats = seatAllocationService.allocateAndLockSeats(
                 request.getShowId(), request.getSeatCount(), request.getPreferredSeatIds());
@@ -120,6 +126,15 @@ public class BookingService {
         }
         if (request.getSeatCount() == null || request.getSeatCount() <= 0) {
             throw new BadRequestException("seatCount must be greater than 0");
+        }
+    }
+
+    private void validateShowIsActive(Show show) {
+        if (show.isArchived() || show.getShowTime() == null || show.getShowTime().isBefore(LocalDateTime.now())) {
+            throw new NotFoundException("Show is no longer available");
+        }
+        if (!movieRepository.existsByMovieName(show.getMovieName())) {
+            throw new NotFoundException("Show is no longer available");
         }
     }
 

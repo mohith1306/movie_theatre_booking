@@ -1,5 +1,5 @@
 import { createContext, useEffect, useMemo, useState } from "react";
-import { createBooking, fetchSeats, getMovies, getTheatres, loginUser } from "../services/api";
+import { adminLoginUser, createBooking, fetchSeats, getMovies, getTheatres, loginUser } from "../services/api";
 import { getStoredUser, isSeatSelectable, normalizeMovie, normalizeSeat, normalizeTheatre, safeParseJSON, seatUiStatus, STORAGE_KEYS } from "../utils/helpers";
 
 const BookingContext = createContext(null);
@@ -231,6 +231,24 @@ export function BookingProvider({ children }) {
     }
   };
 
+  const adminLogin = async (username, password) => {
+    try {
+      const response = await adminLoginUser({ username, password });
+      if (response && response.userId) {
+        setUser(response);
+        return response;
+      }
+
+      throw new Error("Invalid response from server");
+    } catch (error) {
+      setState((previous) => ({
+        ...previous,
+        error: error?.response?.data?.message || "Admin login failed"
+      }));
+      throw error;
+    }
+  };
+
   const logout = () => {
     setUser(null);
   };
@@ -253,6 +271,7 @@ export function BookingProvider({ children }) {
   const value = {
     user,
     login,
+    adminLogin,
     logout,
     movies: state.movies,
     theatres: state.theatres,

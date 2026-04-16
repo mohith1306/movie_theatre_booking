@@ -4,6 +4,7 @@ import useBooking from "../hooks/useBooking";
 export default function Navbar() {
   const navigate = useNavigate();
   const { user, logout, clearBooking } = useBooking();
+  const isAdmin = user?.role === "ADMIN";
 
   const handleLogout = () => {
     logout();
@@ -19,10 +20,12 @@ export default function Navbar() {
           <Link className="text-[#ffb4aa] border-b-2 border-[#e50914] pb-1" to="/">Movies</Link>
           <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/theatre">Theatres</Link>
           <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/summary">Summary</Link>
+          {isAdmin && <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/admin">Admin Dashboard</Link>}
+          {!user && <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/admin/login">Admin Login</Link>}
           {!user && <Link className="text-[#e5e2e1] hover:text-[#ffb4aa] transition-colors" to="/login">Login</Link>}
         </div>
         <div className="flex items-center gap-3">
-          {user && <span className="text-sm text-[#af8782] hidden sm:inline">{user.name}</span>}
+          {user && <span className="text-sm text-[#af8782] hidden sm:inline">{user.name}{isAdmin ? " · ADMIN" : ""}</span>}
           {user ? (
             <button
               className="bg-[#e50914] text-white px-4 py-2 rounded-xl text-sm font-bold hover:shadow-lg transition-shadow"

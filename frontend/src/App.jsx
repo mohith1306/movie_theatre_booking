@@ -9,6 +9,8 @@ import Payment from "./pages/Payment";
 import Confirmation from "./pages/Confirmation";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 
 export default function App() {
   const RequirePaymentAccess = ({ children }) => {
@@ -22,6 +24,17 @@ export default function App() {
   const RequireConfirmationAccess = ({ children }) => {
     const bookingFlow = useBooking();
     if (!bookingFlow.bookingResult) {
+      return <Navigate to="/" replace />;
+    }
+    return children;
+  };
+
+  const RequireAdminAccess = ({ children }) => {
+    const bookingFlow = useBooking();
+    if (!bookingFlow.user) {
+      return <Navigate to="/admin/login" replace />;
+    }
+    if (bookingFlow.user.role !== "ADMIN") {
       return <Navigate to="/" replace />;
     }
     return children;
@@ -53,6 +66,15 @@ export default function App() {
             }
           />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route
+            path="/admin"
+            element={
+              <RequireAdminAccess>
+                <AdminDashboard />
+              </RequireAdminAccess>
+            }
+          />
           <Route path="/register" element={<Register />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

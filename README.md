@@ -88,7 +88,7 @@ After running the database setup, use these test accounts:
 - Password: `password`
 
 **Admin Account:**
-- Email: `admin@example.com`
+- Username: `admin`
 - Password: `password`
 
 ### Features
@@ -114,6 +114,13 @@ After running the database setup, use these test accounts:
 2. Enter your email and password
 3. Click "Login"
 4. On success, you'll be redirected to the home page with user info displayed in navbar
+
+### Admin Login
+
+1. Navigate to `/admin/login`
+2. Enter the admin username and password
+3. Click "Login to Admin Dashboard"
+4. On success, you'll be redirected to `/admin`
 
 ## Notes for GitHub Push
 
