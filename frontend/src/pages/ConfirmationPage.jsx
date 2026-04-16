@@ -1,11 +1,12 @@
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { cancelBooking } from "../services/api";
 
 export default function ConfirmationPage({ bookingFlow }) {
   const result = bookingFlow.bookingResult;
   const [cancelMessage, setCancelMessage] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
+  const navigate = useNavigate();
 
   const handleCancel = async () => {
     if (!result?.bookingId) {
@@ -28,6 +29,12 @@ export default function ConfirmationPage({ bookingFlow }) {
     } finally {
       setIsCancelling(false);
     }
+  };
+
+  const handleGoHome = () => {
+    // Clear booking state when user leaves confirmation page
+    bookingFlow.clearBookingAfterSuccess();
+    navigate("/");
   };
 
   return (
@@ -59,9 +66,13 @@ export default function ConfirmationPage({ bookingFlow }) {
             {isCancelling ? "Cancelling..." : "Cancel Booking"}
           </button>
         )}
-        <Link className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 font-bold" to="/">
+        <button
+          className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 font-bold"
+          type="button"
+          onClick={handleGoHome}
+        >
           Go to Home
-        </Link>
+        </button>
       </div>
     </section>
   );

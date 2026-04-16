@@ -28,7 +28,16 @@ export function BookingProvider({ children }) {
     }
 
     const storedBooking = safeParseJSON(window.localStorage.getItem(STORAGE_KEYS.booking), null);
-    return storedBooking ? { ...initialBookingState, ...storedBooking } : initialBookingState;
+    if (storedBooking) {
+      // Don't restore seat data from localStorage - it's dynamic server state that can change
+      // Only restore static user selections and booking flow state
+      return {
+        ...initialBookingState,
+        ...storedBooking,
+        seatData: [] // Always start with empty seats, fetch fresh from server
+      };
+    }
+    return initialBookingState;
   });
 
   useEffect(() => {
@@ -106,6 +115,11 @@ export function BookingProvider({ children }) {
     };
 
     loadSeats();
+
+    // Auto-refresh seats every 10 seconds to show real-time booking updates
+    const refreshInterval = setInterval(loadSeats, 10000);
+    
+    return () => clearInterval(refreshInterval);
   }, [state.selectedShowId]);
 
   useEffect(() => {
@@ -225,6 +239,17 @@ export function BookingProvider({ children }) {
     setState(initialBookingState);
   };
 
+  const clearBookingAfterSuccess = () => {
+    // After successful booking, clear selections but keep the show for potential rebooking
+    setState((previous) => ({
+      ...previous,
+      selectedSeatIds: [],
+      seatData: [],
+      bookingResult: null,
+      paymentStatus: "idle"
+    }));
+  };
+
   const value = {
     user,
     login,
@@ -250,6 +275,7 @@ export function BookingProvider({ children }) {
     setError: (error) => setState((previous) => ({ ...previous, error })),
     submitBooking,
     clearBooking,
+    clearBookingAfterSuccess,
     setBookingResult: (bookingResult) => setState((previous) => ({ ...previous, bookingResult }))
   };
 
